@@ -12,9 +12,11 @@ class QueueCog(commands.Cog, name = "queue"):
         self.progress = False
         self.lobby = list()
         self.task = ""
+        self.author = ""
 
     @commands.command()
     async def host(self, ctx: commands.Context):
+        self.author = str(ctx.message.author)
         self.task = asyncio.create_task(self.preparePlayers(ctx))
         await self.task
 
@@ -47,12 +49,14 @@ class QueueCog(commands.Cog, name = "queue"):
         if (ctx.message.author in lobby):
             self.lobby.remove(str(ctx.message.author))
             await ctx.send("{} has left the lobby.".format(ctx.message.author.name))
+        else:
+            await ctx.send("{} was not in the lobby.".format(ctx.message.author.name))
 
     async def preparePlayers(self, ctx: commands.Context):
         if (self.progress):
             await ctx.send("Lobby already in progress!")
         else:
-            msg = await ctx.send("All participants click the ✅ to join. Type \".leave\" to leave.")
+            msg = await ctx.send("{} has started a lobby!\nAll participants click the ✅ to join. Type \".leave\" to leave.".format(ctx.message.author.name))
             await msg.add_reaction("✅")
 
             self.progress = True
@@ -62,7 +66,7 @@ class QueueCog(commands.Cog, name = "queue"):
 
             try:
                 while True:
-                    reaction_add, user_add = await self.bot.wait_for("reaction_add", timeout = 60.0, check = check)
+                    reaction_add, user_add = await self.bot.wait_for("reaction_add", timeout = 5 * 60, check = check)
                     if (reaction_add.emoji == "✅"):
                         if (not str(user_add) in self.lobby):
                             self.lobby.append(str(user_add))
@@ -87,7 +91,9 @@ class QueueCog(commands.Cog, name = "queue"):
             await ctx.send(msg)
 
     async def randomTeams(self, ctx: commands.Context):
-        if (len(self.lobby) == 0):
+        if (not self.author == str(ctx.message.author)):
+            await ctx.send("{}, you are not the host of the lobby".format(ctx.message.author.name))
+        elif (len(self.lobby) == 0):
             await ctx.send("Lobby is empty.")
         elif (self.progress):
             random.shuffle(self.lobby)
@@ -105,8 +111,11 @@ class QueueCog(commands.Cog, name = "queue"):
             await ctx.send("No lobby in progress.")
         
     async def stopLobby(self, ctx: commands.Context):
-        if (self.progress):
+        if (self.progress and self.author == str(ctx.message.author)):
             self.progress = False
+            self.author = ""
             self.lobby.clear()
             self.task.cancel()
             await ctx.send("Lobby is now closed. Please type \".host\" to start a new lobby.")
+        else:
+            await ctx.send("{}, you are not the host of the lobby".format(ctx.message.author.name))
