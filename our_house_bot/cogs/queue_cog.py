@@ -11,10 +11,12 @@ class QueueCog(commands.Cog, name = "queue"):
         self.bot = bot
         self.progress = False
         self.lobby = list()
+        self.task = ""
 
     @commands.command()
     async def host(self, ctx: commands.Context):
-        await self.preparePlayers(ctx)
+        self.task = asyncio.create_task(self.preparePlayers(ctx))
+        await self.task
 
     @commands.command()
     async def draft(self, ctx: commands.Context):
@@ -103,6 +105,8 @@ class QueueCog(commands.Cog, name = "queue"):
             await ctx.send("No lobby in progress.")
         
     async def stopLobby(self, ctx: commands.Context):
-        self.progress = False
-        self.lobby.clear()
-        await ctx.send("Lobby is now closed. Please type \".host\" to start a new lobby.")
+        if (self.progress):
+            self.progress = False
+            self.lobby.clear()
+            self.task.cancel()
+            await ctx.send("Lobby is now closed. Please type \".host\" to start a new lobby.")
