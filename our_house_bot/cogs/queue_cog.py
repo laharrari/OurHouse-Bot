@@ -121,11 +121,13 @@ class QueueCog(commands.Cog, name = "queue"):
             await ctx.send("No lobby in progress.")
         
     async def stopLobby(self, ctx: commands.Context):
-        if (self.progress and self.author == str(ctx.message.author)):
+        if (not self.progress):
+            await ctx.send("No lobby in progress.")
+        elif (not self.author == str(ctx.message.author)):
+            await ctx.send("{}, you are not the host of the lobby".format(ctx.message.author.name))
+        else:
             self.progress = False
             self.author = ""
             self.lobby.clear()
             self.task.cancel()
             await ctx.send("Lobby is now closed. Please type \".host\" to start a new lobby.")
-        else:
-            await ctx.send("{}, you are not the host of the lobby".format(ctx.message.author.name))
