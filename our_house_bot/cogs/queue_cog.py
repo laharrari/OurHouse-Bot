@@ -14,6 +14,16 @@ class QueueCog(commands.Cog, name = "queue"):
         self.task = ""
         self.author = ""
 
+    @commands.command(aliases=["commands"])
+    async def help(self, ctx: commands.Context):
+        msg = "Thank you for using OurHouse! It is still currently under development :)\n\n"
+        msg += ".host - Start a lobby.\n"
+        msg += ".lobby - See all participants in the lobby.\n"
+        msg += ".random - Randomize everyone in the lobby to two teams.\n"
+        msg += ".stop - Close the lobby.\n\n"
+        msg += "If you have any questions or suggestions, please contact primal#7602! Thank you!"
+        await ctx.send(msg)
+
     @commands.command()
     async def host(self, ctx: commands.Context):
         self.author = str(ctx.message.author)
